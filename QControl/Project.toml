@@ -1,0 +1,4 @@
+name = "QControl"
+uuid = "edd81335-bcb3-4e33-9681-20bc820459a6"
+authors = ["Shantanu Jha <shantanu.rajesh.jha@gmail.com>", "Shoumik Chowdhury <shoumikc@mit.edu>"]
+version = "0.1.0"
