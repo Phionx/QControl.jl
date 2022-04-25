@@ -2,3 +2,15 @@ name = "QControl"
 uuid = "edd81335-bcb3-4e33-9681-20bc820459a6"
 authors = ["Shantanu Jha <shantanu.rajesh.jha@gmail.com>", "Shoumik Chowdhury <shoumikc@mit.edu>"]
 version = "0.1.0"
+
+[deps]
+Altro = "5dcf52e5-e2fb-48e0-b826-96f46d2e3e73"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
+QuantumOptics = "6e0679c1-51ea-5a7c-ac74-d61b76210b0c"
+RobotDynamics = "38ceca67-d8d3-44e8-9852-78a5596522e1"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+TrajectoryOptimization = "c79d492b-0548-5874-b488-5a62c1d9d0ca"
