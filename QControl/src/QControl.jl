@@ -14,7 +14,8 @@ const TO = TrajectoryOptimization
 const RD = RobotDynamics
 
 include("utils.jl")
+include("visualization.jl")
 include("altro_solver.jl")
-export QuantumState, gen_LQR_params
+export QuantumState, gen_LQR_params, plot_wigner
 
 end # module
