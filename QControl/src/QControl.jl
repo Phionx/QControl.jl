@@ -26,6 +26,6 @@ include("simulators.jl")
 export solve_me
 
 include("altro_solver.jl")
-export QuantumState, gen_LQR_params
+export QuantumState, gen_default_QR, gen_default_objective, gen_LQR_params
 
 end # module
