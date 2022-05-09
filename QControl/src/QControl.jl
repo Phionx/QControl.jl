@@ -15,7 +15,8 @@ const RD = RobotDynamics
 
 include("utils.jl")
 include("visualization.jl")
+include("simulators.jl")
 include("altro_solver.jl")
-export QuantumState, gen_LQR_params, plot_wigner
+export QuantumState, gen_LQR_params, plot_wigner, split_state
 
 end # module

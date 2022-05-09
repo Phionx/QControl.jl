@@ -30,20 +30,21 @@ function gen_LQR_params(bfull::Basis, H₀::Operator, Hcs::Vector{<:Operator}, �
     control_dim = 2 * num_controls # Factor of 2 comes from complex -> real
 
 
-    function dynamics_func(::QuantumState, x, u)
-        ψ_full = map(i -> x[(i-1)*state_size+1:i*state_size], 1:num_states)
-        Ht_full = H₀_full
-        for control_indx = 1:num_controls
-            uᵣ = u[control_indx]
-            uᵢ = u[control_indx+num_controls]
-            Ht_full += uᵣ * Hcs_full[control_indx] + uᵢ * im_times_isomorphism(Hcs_full[control_indx])
-        end
+    # function dynamics_func(::QuantumState, x, u)
+    #     ψ_full = split_state(x, state_size, num_states)
+    #     Ht_full = H₀_full
+    #     for control_indx = 1:num_controls
+    #         uᵣ = u[control_indx]
+    #         uᵢ = u[control_indx+num_controls]
+    #         Ht_full += uᵣ * Hcs_full[control_indx] + uᵢ * im_times_isomorphism(Hcs_full[control_indx])
+    #     end
 
-        # TODO: density matrices, loss, etc
-        dψ = reduce(vcat, map(i -> -im_times_isomorphism(Ht_full * ψ_full[i]), 1:num_states))
-        return dψ
-    end
+    #     # TODO: density matrices, loss, etc
+    #     dψ = reduce(vcat, map(i -> -im_times_isomorphism(Ht_full * ψ_full[i]), 1:num_states))
+    #     return dψ
+    # end
 
+    dynamics_func(::QuantumState, x, u) = schrodinger_dψ(x, u, H₀_full, Hcs_full; num_states=num_states)
 
     return state_dim, control_dim, dynamics_func, ψi_combined, ψt_combined
 end
