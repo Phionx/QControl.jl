@@ -2,6 +2,8 @@ module QControl
 
 using QuantumOptics
 using PyPlot
+using Plots
+pyplot()
 using Altro
 using ForwardDiff
 using LinearAlgebra
