@@ -21,6 +21,7 @@ end
 
 function solve_me(bfull::Basis, H₀::Operator, Hcs::Vector{<:Operator}, ψi::Vector{<:Ket}, u::Vector{Vector{ComplexF64}})
     """
+    TODO: complete this!
 
     Args:
         bfull: full basis
@@ -36,6 +37,6 @@ function solve_me(bfull::Basis, H₀::Operator, Hcs::Vector{<:Operator}, ψi::Ve
     num_states = size(ψi_full)[1]
 
     f(x, p, t) = schrodinger_dψ(x, p[t], H₀_full, Hcs_full; num_states=num_states)
-    x0 = ψi_combined
+    # x0 = ψi_combined
 
 end

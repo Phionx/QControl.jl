@@ -1,3 +1,5 @@
+# Complex <-> Real Isomorphism Helpers
+# ======================================================================
 function complex_to_real_isomorphism(M::Union{Matrix,SparseMatrixCSC}) #TODO Union{Matrix{ComplexF64}, SparseMatrixCSC{ComplexF64, Int64}})
     """
     M
@@ -117,4 +119,32 @@ function conj_isomorphism(v_full::Vector) # TODO: {Float64})
     vᵣ = v_full[1:n_rows]
     vᵢ = v_full[n_rows+1:end]
     return [vᵣ; -vᵢ]
+end
+
+
+# Save & Load Data
+# ======================================================================
+function save_solver_data(solver::ALTROSolver; label::String="solver")
+    data = Dict("X" => states(solver), "U" => controls(solver))
+    save_object(string(label, ".jld2"), data)
+end
+
+function load_solver_data(filename::String)
+    data = load_object(filename)
+    return data
+end
+
+# Parse Data
+# ======================================================================
+function states_to_kets(X::Vector)
+    Xv = Vector.(X)
+    Xcv = real_to_complex_isomorphism.(Xv)
+    Xqv = map(cv -> normalize(Ket(bfull, cv)), Xcv)
+    return Xqv
+end
+
+function controls_to_amplitudes(U::Vector)
+    Uv = Vector.(U)
+    Ucv = QC.real_to_complex_isomorphism.(Uv)
+    return Ucv
 end
