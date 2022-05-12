@@ -8,7 +8,7 @@ function gen_default_QR(state_dim::Int, control_dim::Int; N::Int=1001, tf::Float
     # n_op = sigmap(bq_single)*sigmam(bq_single)
     # Q = complex_to_real_isomorphism(n_op.data)
     # Q = complex_to_real_isomorphism(one(bq_single).data)
-    Q = complex_to_real_isomorphism(zeros(state_dim ÷ 2, state_dim ÷ 2) .+ im)
+    Q = complex_to_real_isomorphism(zeros(state_dim ÷ 2, state_dim ÷ 2) .+ 0.0 * im)
 
     # # R = complex_to_real_isomorphism(reshape([1.0 + 0.0*im],(1,1)))
     R = complex_to_real_isomorphism(R_scale * Matrix(I(control_dim ÷ 2)) .+ 0.0 * im)

@@ -136,15 +136,15 @@ end
 
 # Parse Data
 # ======================================================================
-function states_to_kets(X::Vector)
+function states_to_kets(X::Vector, b::Basis)
     Xv = Vector.(X)
     Xcv = real_to_complex_isomorphism.(Xv)
-    Xqv = map(cv -> normalize(Ket(bfull, cv)), Xcv)
+    Xqv = map(cv -> normalize(Ket(b, cv)), Xcv)
     return Xqv
 end
 
 function controls_to_amplitudes(U::Vector)
     Uv = Vector.(U)
-    Ucv = QC.real_to_complex_isomorphism.(Uv)
+    Ucv = real_to_complex_isomorphism.(Uv)
     return Ucv
 end
