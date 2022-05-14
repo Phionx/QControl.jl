@@ -13,7 +13,7 @@ function plot_wigner(state; wigner_pts::Vector=[-5:0.1:5;], trace_idx=nothing)
 
     heatmap(wigner_pts,
         wigner_pts,
-        W(state)',
+        W(state)', #tranpose needed: https://github.com/qojulia/QuantumOptics.jl/issues/280
         c=:seismic,
         clim=(-1, 1),
         aspect_ratio=:equal,
