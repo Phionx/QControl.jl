@@ -1,6 +1,7 @@
 # QControl.jl
 Optimal Quantum Control
 
+Presentation: [https://www.youtube.com/watch?v=_Hdch7UruTo](https://www.youtube.com/watch?v=_Hdch7UruTo)
 
 ## Contributing
 
