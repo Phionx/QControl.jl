@@ -3,6 +3,13 @@ function split_state(x, state_size::Int, num_states::Int)
     return ψ_full
 end
 
+function tanh_envelope(slope, ts)
+    ts = ts - minimum(ts)
+    ys = (tanh.(slope * ts) + tanh.(slope * (maximum(ts) .- ts))) / 2
+    ys = (ys .- minimum(ys)) / (maximum(ys) - minimum(ys))
+    return ys
+end
+
 function schrodinger_dψ(x, u, H₀_full, Hcs_full; num_states::Int=1)
     state_size = size(x)[1] ÷ num_states
     num_controls = size(Hcs_full)[1]

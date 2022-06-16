@@ -109,3 +109,36 @@ function animate_bloch(ρs; duration=0.03, save_all=false)
     b.render()
     b
 end
+
+function fft_plot(u::Vector{ComplexF64}, dt::Float64, tf::Float64; t0::Float64=0.0, xlim::Tuple{Float64,Float64}=(-1, 1))
+    # using DSP
+    Ts = dt # sampling period
+    tmax = tf # Start time 
+
+    # time coordinate
+    t = t0:Ts:tmax
+
+    # real
+    ur = map(cv -> real(cv), u)
+    ui = map(cv -> imag(cv), u)
+
+    signal = ur
+    F_r = fft(signal) |> fftshift
+    freqs_r = fftfreq(length(t), 1.0 / Ts) |> fftshift
+
+    # real
+    signal = Uiv
+    F_i = fft(signal) |> fftshift
+    freqs_i = fftfreq(length(t), 1.0 / Ts) |> fftshift
+
+    # plots 
+    # time_domain = plot(t, signal)
+
+    freq_domain = plot(freqs_r, abs.(F_r), label="F{Re[u(t)]}")
+    freq_domain = plot(freqs_i, abs.(F_i), label="F{Im[u(t)]}")
+    xlabel("Frequency [GHz]")
+    xlim(xlim[1], xlim[2])
+    grid("on")
+    legend()
+    tight_layout()
+end
