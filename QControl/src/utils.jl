@@ -125,7 +125,7 @@ end
 # Save & Load Data
 # ======================================================================
 function save_solver_data(solver::ALTROSolver; label::String="solver")
-    data = Dict("X" => states(solver), "U" => controls(solver))
+    data = Dict("astates" => states(solver), "acontrols" => controls(solver))
     save_object(string(label, ".jld2"), data)
 end
 

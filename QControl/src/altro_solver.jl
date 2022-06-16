@@ -18,8 +18,9 @@ end
 
 function gen_default_Qf(state_dim::Int, ψt_state::Vector{Float64})
     I_matrix = complex_to_real_isomorphism(Matrix(I(state_dim ÷ 2)) .+ 0.0 * im)
-    Qf = (I_matrix - ψt_state * transpose(conj_isomorphism(ψt_state)))
+    # Qf = (I_matrix - ψt_state * transpose(conj_isomorphism(ψt_state)))
     # # ⟨ψf|Qf|ψf⟩ = ⟨ψf|(I - |ψt⟩⟨ψt|)|ψf⟩ = 1 - |⟨ψf|ψt⟩|^2
+    Qf = complex_to_real_isomorphism(zeros(state_dim ÷ 2, state_dim ÷ 2) .+ 0.0 * im)
     return Qf
 end
 
@@ -32,6 +33,17 @@ end
 
 function gen_LQR_params(bfull::Basis, H₀::Operator, Hcs::Vector{<:Operator}, ψi::Vector{<:Ket}, ψt::Vector{<:Ket})
     """
+    Here we use the augmented state (`astate`) and augmented control (`acontrol``), as defined below. 
+
+    ```
+    astate = [ψ_state_1, ψ_state_2, ..., ψ_state_n, int(controls), controls, d(controls)]
+    acontrol = [d²(controls)]
+    ```
+
+    where `controls = [uᵣ₁, uᵣ₂, ⋯ , uᵣₙ, uᵢ₁, uᵢ₂, ⋯ , uᵢₙ]`
+
+    This augmented state and control technique is based on work 
+    in Propson, T. et al. Physical Review Applied 17 (2022). 
 
     Args:
         bfull: full basis
@@ -46,18 +58,23 @@ function gen_LQR_params(bfull::Basis, H₀::Operator, Hcs::Vector{<:Operator}, �
     ψt_full = complex_to_real_isomorphism.(map(ψ -> ψ.data, ψt))
 
 
-    ψi_combined = reduce(vcat, ψi_full)
-    ψt_combined = reduce(vcat, ψt_full)
-
     num_states = size(ψi_full)[1]
     state_size = size(ψi_full[1])[1]
     @assert size(ψi_full)[1] == size(ψt_full)[1]
-    state_dim = num_states * state_size
-
     num_controls = size(Hcs_full)[1]
-    control_dim = 2 * num_controls # Factor of 2 comes from complex -> real
+
+
+    astate_dim = num_states * state_size + 3 * 2 * num_controls # Factor of 2 comes from complex -> real isomorphism, Factor of 3 comes from int(controls), controls, d(controls)
+    acontrol_dim = 2 * num_controls
+
+
+    ψi_combined = reduce(vcat, ψi_full)
+    ψt_combined = reduce(vcat, ψt_full)
+
+    astate_initial = [ψi_combined; fill(0, 3 * 2 * num_controls)]
+    astate_target = [ψt_combined; fill(0, 3 * 2 * num_controls)]
 
     dynamics_func(::QuantumState, x, u) = schrodinger_dψ(x, u, H₀_full, Hcs_full; num_states=num_states)
 
-    return state_dim, control_dim, dynamics_func, ψi_combined, ψt_combined
+    return astate_dim, acontrol_dim, dynamics_func, astate_initial, astate_target
 end

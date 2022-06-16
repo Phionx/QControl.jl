@@ -127,7 +127,7 @@ function fft_plot(u::Vector{ComplexF64}, dt::Float64, tf::Float64; t0::Float64=0
     freqs_r = fftfreq(length(t), 1.0 / Ts) |> fftshift
 
     # real
-    signal = Uiv
+    signal = ui
     F_i = fft(signal) |> fftshift
     freqs_i = fftfreq(length(t), 1.0 / Ts) |> fftshift
 
