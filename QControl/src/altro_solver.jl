@@ -2,16 +2,24 @@
 RobotDynamics.@autodiff struct QuantumState <: RobotDynamics.ContinuousDynamics end
 # TODO: store appropriate information in QuantumState, e.g. state size
 
-function gen_default_QR(state_dim::Int, control_dim::Int; N::Int=1001, tf::Float64=10.0, R_scale::Float64=0.0001)
+function gen_default_QR(astate_dim::Int, acontrol_dim::Int; N::Int=1001, tf::Float64=10.0, amp_scale::Float64=0.0001)
     dt = tf / (N - 1) # time step
+    num_controls = acontrol_dim ÷ 2 # acontrol stores [d²(controls)], factor of 2 comes from real -> complex isomorphism
+    state_indices, icontrol_indices, control_indices, dcontrol_indices = generate_astate_indices(astate_dim, num_controls)
+
+    Q_diag = zeros(astate_dim)
+    Q_diag[icontrol_indices] = amp_scale * ones(size(icontrol_indices)[1])
+    Q_diag[control_indices] = 1e2 * amp_scale * ones(size(control_indices)[1])
+    Q_diag[dcontrol_indices] = 1e1 * amp_scale * ones(size(dcontrol_indices)[1])
 
     # n_op = sigmap(bq_single)*sigmam(bq_single)
     # Q = complex_to_real_isomorphism(n_op.data)
     # Q = complex_to_real_isomorphism(one(bq_single).data)
-    Q = complex_to_real_isomorphism(zeros(state_dim ÷ 2, state_dim ÷ 2) .+ 0.0 * im)
+
+    Q = Diagonal(Q_diag)
 
     # # R = complex_to_real_isomorphism(reshape([1.0 + 0.0*im],(1,1)))
-    R = complex_to_real_isomorphism(R_scale * Matrix(I(control_dim ÷ 2)) .+ 0.0 * im)
+    R = complex_to_real_isomorphism(amp_scale * Matrix(I(acontrol_dim ÷ 2)) .+ 0.0 * im)
 
     return Q, R
 end
@@ -24,9 +32,9 @@ function gen_default_Qf(state_dim::Int, ψt_state::Vector{Float64})
     return Qf
 end
 
-function gen_default_objective(state_dim::Int, control_dim::Int, ψt_state::Vector{Float64}; N::Int=1001, tf::Float64=10.0, R_scale::Float64=0.0001)
-    Q, R = gen_default_QR(state_dim, control_dim; N=N, tf=tf, R_scale=R_scale)
-    Qf = gen_default_Qf(state_dim, ψt_state)
+function gen_default_objective(astate_dim::Int, acontrol_dim::Int, ψt_state::Vector{Float64}; N::Int=1001, tf::Float64=10.0, amp_scale::Float64=0.0001)
+    Q, R = gen_default_QR(astate_dim, acontrol_dim; N=N, tf=tf, amp_scale=amp_scale)
+    Qf = gen_default_Qf(astate_dim, ψt_state)
     obj = LQRObjective(Q, R, Qf, ψt_state, N)
     return obj
 end
@@ -36,7 +44,7 @@ function gen_LQR_params(bfull::Basis, H₀::Operator, Hcs::Vector{<:Operator}, �
     Here we use the augmented state (`astate`) and augmented control (`acontrol``), as defined below. 
 
     ```
-    astate = [ψ_state_1, ψ_state_2, ..., ψ_state_n, int(controls), controls, d(controls)]
+    astate = [ψ_state_1, ψ_state_2, ..., ψ_state_n, ∫(controls), controls, d(controls)]
     acontrol = [d²(controls)]
     ```
 
@@ -64,7 +72,7 @@ function gen_LQR_params(bfull::Basis, H₀::Operator, Hcs::Vector{<:Operator}, �
     num_controls = size(Hcs_full)[1]
 
 
-    astate_dim = num_states * state_size + 3 * 2 * num_controls # Factor of 2 comes from complex -> real isomorphism, Factor of 3 comes from int(controls), controls, d(controls)
+    astate_dim = num_states * state_size + 3 * 2 * num_controls # Factor of 2 comes from complex -> real isomorphism, Factor of 3 comes from ∫(controls), controls, d(controls)
     acontrol_dim = 2 * num_controls
 
 

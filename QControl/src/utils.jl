@@ -148,3 +148,38 @@ function controls_to_amplitudes(U::Vector)
     Ucv = real_to_complex_isomorphism.(Uv)
     return Ucv
 end
+
+function generate_astate_indices(astate_size::Int, num_controls::Int)
+    """
+    Here we use the augmented state (`astate`) and augmented control (`acontrol``), as defined below. 
+
+    ```
+    astate = [ψ_state_1, ψ_state_2, ..., ψ_state_n, ∫(controls), controls, d(controls)]
+    acontrol = [d²(controls)]
+    ```
+
+    where `controls = [uᵣ₁, uᵣ₂, ⋯ , uᵣₙ, uᵢ₁, uᵢ₂, ⋯ , uᵢₙ]`
+
+    This augmented state and control technique is based on work 
+    in Propson, T. et al. Physical Review Applied 17 (2022). 
+
+    Args:
+        astate_size: size of astate
+        num_controls: number of control fields
+
+    Returns:
+        state_indices: astate indices for [[ψ_state_1, ψ_state_2, ..., ψ_state_n]
+        icontrol_indices: astate indicies for [∫(controls)]
+        control_indices: astate indices for [controls]
+        dcontrol_indices: astate indices for [d(controls)]
+    """
+    full_control_size = 2 * num_controls # Factor of 2 comes from complex -> real isomorphism
+    full_state_size = astate_size - 3 * full_control_size # Factor of 3 comes from ∫(controls), controls, d(controls)
+
+    state_indices = 1:full_state_size
+    icontrol_indices = full_state_size+1:full_state_size+full_control_size
+    control_indices = (full_state_size+full_control_size)+1:(full_state_size+full_control_size)+full_control_size
+    dcontrol_indices = (full_state_size+2*full_control_size)+1:(full_state_size+2*full_control_size)+full_control_size
+
+    return state_indices, icontrol_indices, control_indices, dcontrol_indices
+end

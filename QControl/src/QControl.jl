@@ -18,7 +18,7 @@ const TO = TrajectoryOptimization
 const RD = RobotDynamics
 
 include("utils.jl")
-export save_solver_data, load_solver_data, states_to_kets, controls_to_amplitudes
+export save_solver_data, load_solver_data, states_to_kets, controls_to_amplitudes, generate_astate_indices
 
 include("visualization.jl")
 export plot_wigner, animate_wigner, plot_bloch, animate_bloch, fft_plot

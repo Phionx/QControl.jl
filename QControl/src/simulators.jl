@@ -18,7 +18,7 @@ function schrodinger_dψ(astate, acontrol, H₀_full, Hcs_full; num_states::Int=
     Here we use the augmented state (`astate`) and augmented control (`acontrol``), as defined below. 
 
     ```
-    astate = [ψ_state_1, ψ_state_2, ..., ψ_state_n, int(controls), controls, d(controls)]
+    astate = [ψ_state_1, ψ_state_2, ..., ψ_state_n, ∫(controls), controls, d(controls)]
     acontrol = [d²(controls)]
     ```
 
@@ -37,15 +37,14 @@ function schrodinger_dψ(astate, acontrol, H₀_full, Hcs_full; num_states::Int=
 
     # calculate sizes
     num_controls = size(Hcs_full)[1]
-    full_control_size = 2 * num_controls # Factor of 2 comes from complex -> real isomorphism
-    full_state_size = size(astate)[1] - 3 * full_control_size # Factor of 3 comes from int(controls), controls, d(controls)
-    # state_size = full_state_size ÷ num_states
+
 
     # extract states and controls
-    states = astate[1:full_state_size]
-    # icontrols = astate[full_state_size+1:full_state_size+full_control_size]
-    controls = astate[(full_state_size+full_control_size)+1:(full_state_size+full_control_size)+full_control_size]
-    dcontrols = astate[(full_state_size+2*full_control_size)+1:(full_state_size+2*full_control_size)+full_control_size]
+    state_indices, icontrol_indices, control_indices, dcontrol_indices = generate_astate_indices(size(astate)[1], num_controls)
+    states = astate[state_indices]
+    # icontrols = astate[icontrol_indices]
+    controls = astate[control_indices]
+    dcontrols = astate[dcontrol_indices]
     ddcontrols = acontrol
 
     ψs = split_state(states, num_states)
