@@ -11,21 +11,9 @@ function tanh_envelope(slope, ts)
     return ys
 end
 
-function schrodinger_dψ(astate, acontrol, H₀_full, Hcs_full; num_states::Int=1)
+function schrodinger_dψ(astate, acontrol, H₀_full, Hcs_full; num_states::Int=1, control_derivative_range::Tuple{Int,Int}=(-1, 2))
     """
     Calculates the differential on the augmented state.
-
-    Here we use the augmented state (`astate`) and augmented control (`acontrol``), as defined below. 
-
-    ```
-    astate = [ψ_state_1, ψ_state_2, ..., ψ_state_n, ∫(controls), controls, d(controls)]
-    acontrol = [d²(controls)]
-    ```
-
-    where `controls = [uᵣ₁, uᵣ₂, ⋯ , uᵣₙ, uᵢ₁, uᵢ₂, ⋯ , uᵢₙ]`
-
-    This augmented state and control technique is based on work 
-    in Propson, T. et al. Physical Review Applied 17 (2022). 
 
     Args:
         astate: augmented state vector
@@ -33,20 +21,16 @@ function schrodinger_dψ(astate, acontrol, H₀_full, Hcs_full; num_states::Int=
         H₀_full: base hamiltonian written in real matrix form
         Hcs_full: list of control hamiltonians written in real matrix form
         num_states: number of states 
+        control_derivative_range: 
+            indicates which control derivatives (integrals) we are including
+            e.g. (-1, 2) implies that ∫(controls), (controls), d(controls) are used in astate and acontrol = d²(controls)
     """
 
     # calculate sizes
     num_controls = size(Hcs_full)[1]
 
-
     # extract states and controls
-    state_indices, icontrol_indices, control_indices, dcontrol_indices = generate_astate_indices(size(astate)[1], num_controls)
-    states = astate[state_indices]
-    # icontrols = astate[icontrol_indices]
-    controls = astate[control_indices]
-    dcontrols = astate[dcontrol_indices]
-    ddcontrols = acontrol
-
+    states, icontrols, controls, dcontrols, ddcontrols = extract_state_controls(astate, acontrol, num_controls, control_derivative_range=control_derivative_range)
     ψs = split_state(states, num_states)
 
     Ht_full = H₀_full
@@ -58,7 +42,15 @@ function schrodinger_dψ(astate, acontrol, H₀_full, Hcs_full; num_states::Int=
 
     # TODO: density matrices, loss, etc
     dψs = reduce(vcat, map(i -> -im_times_isomorphism(Ht_full * ψs[i]), 1:num_states))
-    dastate = [dψs; controls; dcontrols; ddcontrols]
+
+    dastate = dψs
+
+    # choose which control derivatives to add to dastate
+    if control_derivative_range[2] > control_derivative_range[1]
+        dastate_controls = reduce(vcat, [controls, dcontrols, ddcontrols][control_derivative_range[1]+2:control_derivative_range[2]+1])
+        dastate = [dastate; dastate_controls]
+    end
+
     return dastate
 end
 

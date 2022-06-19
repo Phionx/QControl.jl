@@ -110,7 +110,14 @@ function animate_bloch(ρs; duration=0.03, save_all=false)
     b
 end
 
-function fft_plot(u::Vector{ComplexF64}, dt::Float64, tf::Float64; t0::Float64=0.0, xlim::Tuple{Float64,Float64}=(-1, 1))
+function testf(u::Vector{ComplexF64}, dt::Float64, tf::Float64;)
+    # using DSP
+    Ts = dt # sampling period
+    tmax = tf # Start time 
+    println("testc")
+end
+
+function plot_fft(u::Vector{ComplexF64}, dt::Float64, tf::Float64; t0::Float64=0.0, xlim::Tuple{Float64,Float64}=(-5.0, 5.0))
     # using DSP
     Ts = dt # sampling period
     tmax = tf # Start time 
@@ -134,11 +141,11 @@ function fft_plot(u::Vector{ComplexF64}, dt::Float64, tf::Float64; t0::Float64=0
     # plots 
     # time_domain = plot(t, signal)
 
-    freq_domain = plot(freqs_r, abs.(F_r), label="F{Re[u(t)]}")
-    freq_domain = plot(freqs_i, abs.(F_i), label="F{Im[u(t)]}")
-    xlabel("Frequency [GHz]")
-    xlim(xlim[1], xlim[2])
-    grid("on")
-    legend()
-    tight_layout()
+    freq_domain = PyPlot.plot(freqs_r, abs.(F_r), label="F{Re[u(t)]}", marker="*")
+    freq_domain = PyPlot.plot(freqs_i, abs.(F_i), label="F{Im[u(t)]}", marker="*")
+    PyPlot.xlabel("Frequency [GHz]")
+    PyPlot.xlim(xlim[1], xlim[2])
+    PyPlot.grid("on")
+    PyPlot.legend()
+    PyPlot.tight_layout()
 end

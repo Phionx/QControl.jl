@@ -1,3 +1,7 @@
+# Optimizer Params
+
+
+
 # Complex <-> Real Isomorphism Helpers
 # ======================================================================
 function complex_to_real_isomorphism(M::Union{Matrix,SparseMatrixCSC}) #TODO Union{Matrix{ComplexF64}, SparseMatrixCSC{ComplexF64, Int64}})
@@ -149,7 +153,7 @@ function controls_to_amplitudes(U::Vector)
     return Ucv
 end
 
-function generate_astate_indices(astate_size::Int, num_controls::Int)
+function generate_astate_indices(astate_size::Int, num_controls::Int; control_derivative_range::Tuple{Int,Int}=(-1, 2))
     """
     Here we use the augmented state (`astate`) and augmented control (`acontrol``), as defined below. 
 
@@ -159,6 +163,7 @@ function generate_astate_indices(astate_size::Int, num_controls::Int)
     ```
 
     where `controls = [uᵣ₁, uᵣ₂, ⋯ , uᵣₙ, uᵢ₁, uᵢ₂, ⋯ , uᵢₙ]`
+    when `control_derivative_range = (-1,2)`
 
     This augmented state and control technique is based on work 
     in Propson, T. et al. Physical Review Applied 17 (2022). 
@@ -166,6 +171,9 @@ function generate_astate_indices(astate_size::Int, num_controls::Int)
     Args:
         astate_size: size of astate
         num_controls: number of control fields
+        control_derivative_range: 
+            indicates which control derivatives (integrals) we are including
+            e.g. (-1, 2) implies that ∫(controls), (controls), d(controls) are used in astate and acontrol = d²(controls)
 
     Returns:
         state_indices: astate indices for [[ψ_state_1, ψ_state_2, ..., ψ_state_n]
@@ -173,13 +181,73 @@ function generate_astate_indices(astate_size::Int, num_controls::Int)
         control_indices: astate indices for [controls]
         dcontrol_indices: astate indices for [d(controls)]
     """
-    full_control_size = 2 * num_controls # Factor of 2 comes from complex -> real isomorphism
-    full_state_size = astate_size - 3 * full_control_size # Factor of 3 comes from ∫(controls), controls, d(controls)
+    # sizes
+    real_control_size = 2 * num_controls # Factor of 2 comes from complex -> real isomorphism
+    total_control_derivatives_in_astate = (control_derivative_range[2] - control_derivative_range[1])
+    @assert total_control_derivatives_in_astate >= 0
 
-    state_indices = 1:full_state_size
-    icontrol_indices = full_state_size+1:full_state_size+full_control_size
-    control_indices = (full_state_size+full_control_size)+1:(full_state_size+full_control_size)+full_control_size
-    dcontrol_indices = (full_state_size+2*full_control_size)+1:(full_state_size+2*full_control_size)+full_control_size
+    real_state_size = astate_size - total_control_derivatives_in_astate * real_control_size # Factor comes from inclusion of control derivatives
+
+    # state
+    state_indices = 1:real_state_size
+
+    # controls
+    icontrol_indices, control_indices, dcontrol_indices = nothing, nothing, nothing
+    if total_control_derivatives_in_astate == 0
+        return state_indices, icontrol_indices, control_indices, dcontrol_indices
+    end
+
+    num_controls_in_astate = 0
+    if control_derivative_range[1] <= -1 && control_derivative_range[2] > -1
+        start_index = (real_state_size + num_controls_in_astate * real_control_size)
+        icontrol_indices = start_index+1:start_index+real_control_size
+        num_controls_in_astate += 1
+    end
+
+    if control_derivative_range[1] <= 0 && control_derivative_range[2] > 0
+        start_index = (real_state_size + num_controls_in_astate * real_control_size)
+        control_indices = start_index+1:start_index+real_control_size
+        num_controls_in_astate += 1
+    end
+
+    if control_derivative_range[1] <= 1 && control_derivative_range[2] > 1
+        start_index = (real_state_size + num_controls_in_astate * real_control_size)
+        dcontrol_indices = start_index+1:start_index+real_control_size
+        num_controls_in_astate += 1
+    end
 
     return state_indices, icontrol_indices, control_indices, dcontrol_indices
+end
+
+function extract_state_controls(astate, acontrol, num_controls::Int; control_derivative_range::Tuple{Int,Int}=(-1, 2))
+    state_indices, icontrol_indices, control_indices, dcontrol_indices = generate_astate_indices(size(astate)[1], num_controls; control_derivative_range=control_derivative_range)
+
+    state = astate[state_indices]
+    icontrols, controls, dcontrols, ddcontrols = nothing, nothing, nothing, nothing
+
+    # extract controls in astate
+    if !isnothing(icontrol_indices)
+        icontrols = astate[icontrol_indices]
+    end
+
+    if !isnothing(control_indices)
+        controls = astate[control_indices]
+    end
+
+    if !isnothing(dcontrol_indices)
+        dcontrols = astate[dcontrol_indices]
+    end
+
+    # extract control in acontrol
+    if control_derivative_range[2] == -1
+        icontrols = acontrol
+    elseif control_derivative_range[2] == 0
+        controls = acontrol
+    elseif control_derivative_range[2] == 1
+        dcontrols = acontrol
+    elseif control_derivative_range[2] == 2
+        ddcontrols = acontrol
+    end
+
+    return state, icontrols, controls, dcontrols, ddcontrols
 end
